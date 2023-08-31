@@ -2,7 +2,16 @@ package api
 
 import (
 	"encoding/json"
+	"fmt"
+	"github.com/gorilla/mux"
+	"log"
 	"net/http"
+
+	"github.com/fiskaly/coding-challenges/signing-service-challenge/persistence"
+)
+
+const (
+	apiVersion = "v0"
 )
 
 // Response is the generic API response container.
@@ -18,25 +27,44 @@ type ErrorResponse struct {
 // Server manages HTTP requests and dispatches them to the appropriate services.
 type Server struct {
 	listenAddress string
+	repo          persistence.SignatureDeviceRepository
 }
 
 // NewServer is a factory to instantiate a new Server.
-func NewServer(listenAddress string) *Server {
+func NewServer(listenAddress string, repo persistence.SignatureDeviceRepository) *Server {
 	return &Server{
 		listenAddress: listenAddress,
-		// TODO: add services / further dependencies here ...
+		repo:          repo,
 	}
 }
 
 // Run registers all HandlerFuncs for the existing HTTP routes and starts the Server.
 func (s *Server) Run() error {
-	mux := http.NewServeMux()
+	router := mux.NewRouter()
 
-	mux.Handle("/api/v0/health", http.HandlerFunc(s.Health))
+	router.
+		HandleFunc(fmt.Sprintf("/api/%s/health", apiVersion), s.Health).
+		Methods(http.MethodGet)
+	router.
+		HandleFunc(fmt.Sprintf("/api/%s/devices", apiVersion), s.CreateSignatureDeviceHandler).
+		Methods(http.MethodPost)
+	router.
+		HandleFunc(fmt.Sprintf("/api/%s/transactions/sign", apiVersion), s.SignTransactionHandler).
+		Methods(http.MethodPost)
+	router.
+		HandleFunc(fmt.Sprintf("/api/%s/devices/{device_id}", apiVersion), s.GetSignatureDeviceHandler).
+		Methods(http.MethodGet)
+	router.
+		HandleFunc(fmt.Sprintf("/api/%s/devices", apiVersion), s.ListSignatureDevicesHandler).
+		Methods(http.MethodGet)
 
-	// TODO: register further HandlerFuncs here ...
+	server := &http.Server{
+		Addr:    s.listenAddress,
+		Handler: router,
+	}
 
-	return http.ListenAndServe(s.listenAddress, mux)
+	log.Println("Server listening on", s.listenAddress)
+	return server.ListenAndServe()
 }
 
 // WriteInternalError writes a default internal error message as an HTTP response.
