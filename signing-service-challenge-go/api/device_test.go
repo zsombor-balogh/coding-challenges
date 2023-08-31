@@ -57,7 +57,7 @@ func TestCreateSignatureDeviceHandler(t *testing.T) {
 		t.Errorf("Expected label %s, got %v", requestBody.Label, response.Data.Label)
 	}
 	if response.Data.LastSignature != "" {
-		t.Errorf("Expected LastSignature to be nil, got %v", response.Data.LastSignature)
+		t.Errorf("Expected LastSignature to be empty, got %v", response.Data.LastSignature)
 	}
 	if response.Data.SignatureCounter != 0 {
 		t.Errorf("Expected SignatureCounter to be 0, got %v", response.Data.SignatureCounter)
