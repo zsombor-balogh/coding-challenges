@@ -26,9 +26,9 @@ func (s *Server) CreateSignatureDeviceHandler(response http.ResponseWriter, requ
 		return
 	}
 
-	deviceID := uuid.New().String()
+	deviceId := uuid.New().String()
 
-	device, err := domain.NewSignatureDevice(deviceID, createReq.Algorithm, createReq.Label)
+	device, err := domain.NewSignatureDevice(deviceId, createReq.Algorithm, createReq.Label)
 	if err != nil {
 		WriteErrorResponse(response, http.StatusInternalServerError, []string{err.Error()})
 		return
